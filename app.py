@@ -141,27 +141,26 @@ if 'veri' in st.session_state:
 
     st.subheader("2. Maç Seçimi")
     
-    # Araya şık bir "VS" yazısı koymak için 3 kolon (sol takım, orta boşluk, sağ takım) oluşturuyoruz
     col1, col2, col3 = st.columns([2, 1, 2])
     takimlar = sorted(df['Ev Sahibi'].unique())
     
     with col1:
         secilen_ev = st.selectbox("Ev Sahibi Takım", takimlar, index=0)
-        # Seçilen ev sahibi takımın logosunu bulup 100 piksel genişliğinde ekrana basıyoruz
         ev_logo_url = df[df['Ev Sahibi'] == secilen_ev]['Ev Logo'].iloc[0]
         st.image(ev_logo_url, width=100)
         
     with col2:
-        # Ortaya gri, büyük bir VS yazısı ekliyoruz
         st.markdown("<h1 style='text-align: center; margin-top: 30px; color: gray;'>VS</h1>", unsafe_allow_html=True)
         
     with col3:
         secilen_dep = st.selectbox("Deplasman Takımı", takimlar, index=1 if len(takimlar)>1 else 0)
-        # Deplasman takımının logosunu bulup basıyoruz
-        dep_logo_url = df[df['Ev Sahibi'] == secilen_dep]['Ev Logo'].iloc[0]
+        # HATA BURADAYDI, DÜZELTİLDİ:
+        dep_logo_url = df[df['Deplasman'] == secilen_dep]['Dep Logo'].iloc[0]
         st.image(dep_logo_url, width=100)
         
     st.divider()
+
+    if st.button("Yapay Zeka Analizini Başlat", type="primary", use_container_width=True):
 
     # Butonu sayfanın tam ortasına ve geniş bir şekilde yerleştiriyoruz
     if st.button("Yapay Zeka Analizini Başlat", type="primary", use_container_width=True):
