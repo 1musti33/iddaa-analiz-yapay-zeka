@@ -49,6 +49,34 @@ def veri_cek(api_key, lig_id, sezon):
 
 def poisson_hesapla(beklenen_gol, atilacak_gol):
     return ((beklenen_gol ** atilacak_gol) * math.exp(-beklenen_gol)) / math.factorial(atilacak_gol)
+@st.cache_data(show_spinner=False)
+def puan_durumu_cek(api_key, lig_id, sezon):
+    url = "https://v3.football.api-sports.io/standings"
+    querystring = {"league": str(lig_id), "season": str(sezon)}
+    headers = {"x-apisports-key": api_key, "x-apisports-host": "v3.football.api-sports.io"}
+    
+    response = requests.get(url, headers=headers, params=querystring)
+    data = response.json()
+    
+    if "response" in data and len(data["response"]) > 0:
+        # API'den gelen karmaşık verinin içinden puan tablosunu buluyoruz
+        standings = data["response"][0]["league"]["standings"][0]
+        tablo = []
+        for takim in standings:
+            tablo.append({
+                "Sıra": takim["rank"],
+                "Takım": takim["team"]["name"],
+                "O": takim["all"]["played"],
+                "G": takim["all"]["win"],
+                "B": takim["all"]["draw"],
+                "M": takim["all"]["lose"],
+                "AG": takim["all"]["goals"]["for"],
+                "YG": takim["all"]["goals"]["against"],
+                "Av": takim["goalsDiff"],
+                "Puan": takim["points"]
+            })
+        return pd.DataFrame(tablo)
+    return None
 
 # --- SOL MENÜ (API VE VERİ GİRİŞİ) ---
 st.sidebar.header("1. Veri Bağlantısı")
@@ -100,6 +128,15 @@ if 'veri' in st.session_state:
     knn_verisi = knn_verisi.merge(dep_ortalamalari, on='Deplasman', suffixes=('', '_Ort'))
     
     st.divider()
+
+# --- PUAN DURUMU TABLOSU (GİZLENEBİLİR PENCERE) ---
+    puan_tablosu = puan_durumu_cek(api_key_input, lig_id, sezon_secimi)
+    if puan_tablosu is not None:
+        # st.expander sayesinde tabloyu açılır/kapanır bir kutu içine alıyoruz ki ekranı çok kaplamasın
+        with st.expander(f"🏆 {secilen_lig_adi} - Güncel Puan Durumu"):
+            # hide_index=True ile baştaki gereksiz sıra numaralarını siliyoruz
+            st.dataframe(puan_tablosu, use_container_width=True, hide_index=True)
+
     st.subheader("2. Maç Seçimi")
     
     col1, col2 = st.columns(2)
